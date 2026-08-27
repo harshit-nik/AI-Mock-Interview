@@ -1,30 +1,28 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+
 import authRoutes from "./routes/authRoutes.js";
+import interviewRoutes from "./routes/interviewRoutes.js";
 
 const app = express();
 
-app.use(
-    cors({
-        origin: "http://localhost:5173",
-        credentials: true,
-    })
-);
-
+// Middleware
+app.use(cors());
 app.use(express.json());
-
 app.use(express.urlencoded({ extended: true }));
-
 app.use(cookieParser());
 
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/interviews", interviewRoutes);
+
+// Health check
 app.get("/", (req, res) => {
     res.status(200).json({
         success: true,
-        message: "PrepWise AI Backend Running Successfully 🚀",
+        message: "AI Mock Interview API is running",
     });
 });
-
-app.use("/api/auth", authRoutes);
 
 export default app;
