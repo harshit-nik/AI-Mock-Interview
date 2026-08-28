@@ -86,3 +86,50 @@ Return ONLY valid JSON in exactly this format:
 
     return JSON.parse(cleanedResponse);
 };
+
+export const generateOverallFeedback = async ({
+    jobRole,
+    difficulty,
+    questions,
+    totalScore,
+}) => {
+    const questionSummary = questions
+        .map(
+            (q, index) => `
+Question ${index + 1}: ${q.question}
+Score: ${q.score}/10
+Feedback: ${q.feedback}
+`
+        )
+        .join("\n");
+
+    const prompt = `
+You are an expert technical interviewer.
+
+Generate concise overall feedback for a candidate who completed a mock interview.
+
+Job Role: ${jobRole}
+Difficulty: ${difficulty}
+Total Score: ${totalScore}/${questions.length * 10}
+
+Interview Performance:
+${questionSummary}
+
+Give feedback covering:
+- Overall performance
+- Strong areas
+- Areas for improvement
+- One practical recommendation
+
+Return ONLY the feedback as plain text.
+Do not use JSON.
+Keep it concise and professional.
+`;
+
+    const response = await ai.models.generateContent({
+        model: "gemini-3.6-flash",
+        contents: prompt,
+    });
+
+    return response.text.trim();
+};
