@@ -36,7 +36,7 @@ export const createInterview = async (req, res) => {
 
 export const generateQuestions = async (req, res) => {
     try {
-        const { jobRole, experience, difficulty } = req.body;
+        const { interviewId, jobRole, experience, difficulty } = req.body;
 
         if (!jobRole || !experience) {
             return res.status(400).json({
@@ -51,10 +51,32 @@ export const generateQuestions = async (req, res) => {
             difficulty: difficulty || "Medium",
         });
 
+        let interview = null;
+
+        if (interviewId) {
+            interview = await Interview.findOne({
+                _id: interviewId,
+                user: req.user._id,
+            });
+
+            if (!interview) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Interview not found",
+                });
+            }
+
+            interview.questions = questions;
+            interview.status = "in-progress";
+
+            await interview.save();
+        }
+
         res.status(200).json({
             success: true,
             message: "Interview questions generated successfully",
             questions,
+            interview,
         });
     } catch (error) {
         console.error("Generate Questions Error:", error.message);
