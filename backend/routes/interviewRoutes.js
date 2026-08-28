@@ -5,6 +5,7 @@ import {
     generateQuestions,
     getUserInterviews,
     getInterviewById,
+    submitAnswer,
 } from "../controllers/interviewController.js";
 
 import authMiddleware from "../middleware/authMiddleware.js";
@@ -22,5 +23,5 @@ router.get("/", authMiddleware, getUserInterviews);
 
 // Get a single interview
 router.get("/:id", authMiddleware, getInterviewById);
-
+router.post("/submit-answer", authMiddleware, submitAnswer);
 export default router;

@@ -35,3 +35,54 @@ Requirements:
 
     return JSON.parse(response.text);
 };
+
+export const evaluateInterviewAnswer = async ({
+    question,
+    answer,
+    jobRole,
+    difficulty,
+}) => {
+    const prompt = `
+You are an expert technical interviewer.
+
+Evaluate the candidate's answer to the interview question.
+
+Job Role: ${jobRole}
+Difficulty: ${difficulty}
+
+Question:
+${question}
+
+Candidate Answer:
+${answer}
+
+Evaluate the answer based on:
+- Technical correctness
+- Relevance
+- Completeness
+- Clarity
+
+Give a score from 0 to 10.
+
+Return ONLY valid JSON in exactly this format:
+
+{
+    "score": 0,
+    "feedback": "Short constructive feedback"
+}
+`;
+
+    const response = await ai.models.generateContent({
+        model: "gemini-3.6-flash",
+        contents: prompt,
+    });
+
+    const text = response.text;
+
+    const cleanedResponse = text
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
+
+    return JSON.parse(cleanedResponse);
+};

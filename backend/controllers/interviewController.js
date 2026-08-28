@@ -1,5 +1,8 @@
 import Interview from "../models/Interview.js";
-import { generateInterviewQuestions } from "../services/geminiService.js";
+import {
+    generateInterviewQuestions,
+    evaluateInterviewAnswer,
+} from "../services/geminiService.js";
 
 export const createInterview = async (req, res) => {
     try {
@@ -133,6 +136,70 @@ export const getInterviewById = async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Server error",
+        });
+    }
+};
+
+export const submitAnswer = async (req, res) => {
+    try {
+        const { interviewId, questionId, answer } = req.body;
+
+        if (!interviewId || !questionId || !answer) {
+            return res.status(400).json({
+                success: false,
+                message: "Interview ID, question ID and answer are required",
+            });
+        }
+
+        const interview = await Interview.findOne({
+            _id: interviewId,
+            user: req.user._id,
+        });
+
+        if (!interview) {
+            return res.status(404).json({
+                success: false,
+                message: "Interview not found",
+            });
+        }
+
+        const question = interview.questions.id(questionId);
+
+        if (!question) {
+            return res.status(404).json({
+                success: false,
+                message: "Question not found",
+            });
+        }
+
+        const evaluation = await evaluateInterviewAnswer({
+            question: question.question,
+            answer,
+            jobRole: interview.jobRole,
+            difficulty: interview.difficulty,
+        });
+
+        question.answer = answer;
+        question.score = evaluation.score;
+        question.feedback = evaluation.feedback;
+
+        await interview.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Answer evaluated successfully",
+            evaluation: {
+                score: evaluation.score,
+                feedback: evaluation.feedback,
+            },
+            question,
+        });
+    } catch (error) {
+        console.error("Submit Answer Error:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to evaluate answer",
         });
     }
 };
