@@ -2,6 +2,7 @@ import express from "express";
 
 import {
     createInterview,
+    generateQuestions,
     getUserInterviews,
     getInterviewById,
 } from "../controllers/interviewController.js";
@@ -12,6 +13,9 @@ const router = express.Router();
 
 // Create a new interview
 router.post("/", authMiddleware, createInterview);
+
+// Generate AI interview questions
+router.post("/generate-questions", authMiddleware, generateQuestions);
 
 // Get all interviews of logged-in user
 router.get("/", authMiddleware, getUserInterviews);

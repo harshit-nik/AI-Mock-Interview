@@ -1,4 +1,5 @@
 import Interview from "../models/Interview.js";
+import { generateInterviewQuestions } from "../services/geminiService.js";
 
 export const createInterview = async (req, res) => {
     try {
@@ -29,6 +30,38 @@ export const createInterview = async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Server error",
+        });
+    }
+};
+
+export const generateQuestions = async (req, res) => {
+    try {
+        const { jobRole, experience, difficulty } = req.body;
+
+        if (!jobRole || !experience) {
+            return res.status(400).json({
+                success: false,
+                message: "Job role and experience are required",
+            });
+        }
+
+        const questions = await generateInterviewQuestions({
+            jobRole,
+            experience,
+            difficulty: difficulty || "Medium",
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Interview questions generated successfully",
+            questions,
+        });
+    } catch (error) {
+        console.error("Generate Questions Error:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to generate interview questions",
         });
     }
 };
