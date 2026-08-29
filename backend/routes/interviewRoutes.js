@@ -1,11 +1,11 @@
 import express from "express";
-
 import {
-    createInterview,
-    generateQuestions,
-    getUserInterviews,
-    getInterviewById,
-    submitAnswer,
+  createInterview,
+  generateQuestions,
+  getUserInterviews,
+  getInterviewById,
+  submitAnswer,
+  completeInterview,
 } from "../controllers/interviewController.js";
 
 import authMiddleware from "../middleware/authMiddleware.js";
@@ -24,4 +24,6 @@ router.get("/", authMiddleware, getUserInterviews);
 // Get a single interview
 router.get("/:id", authMiddleware, getInterviewById);
 router.post("/submit-answer", authMiddleware, submitAnswer);
+
+router.post("/complete", authMiddleware, completeInterview);
 export default router;

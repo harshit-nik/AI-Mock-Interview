@@ -235,3 +235,55 @@ export const submitAnswer = async (req, res) => {
     });
   }
 };
+
+export const completeInterview = async (req, res) => {
+    try {
+        const { interviewId } = req.body;
+
+        const interview = await Interview.findOne({
+            _id: interviewId,
+            user: req.user._id,
+        });
+
+        if (!interview) {
+            return res.status(404).json({
+                success: false,
+                message: "Interview not found",
+            });
+        }
+
+        const allAnswered = interview.questions.every(
+            (question) => question.answer && question.answer.trim() !== ""
+        );
+
+        if (!allAnswered) {
+            return res.status(400).json({
+                success: false,
+                message: "Please answer all questions first",
+            });
+        }
+
+        const totalScore = interview.questions.reduce(
+            (total, question) => total + question.score,
+            0
+        );
+
+        interview.totalScore = totalScore;
+        interview.status = "completed";
+
+        await interview.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Interview completed successfully",
+            interview,
+        });
+    } catch (error) {
+        console.error("Complete Interview Error:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to complete interview",
+        });
+    }
+};
