@@ -3,112 +3,100 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 function Login() {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    const [formData, setFormData] = useState({
-        email: "",
-        password: "",
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
     });
 
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
+    setError("");
+  };
 
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value,
-        });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-        setError("");
-    };
+    if (!formData.email || !formData.password) {
+      setError("Email and password are required.");
+      return;
+    }
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    try {
+      setLoading(true);
+      setError("");
 
-        if (!formData.email || !formData.password) {
-            setError("Email and password are required.");
-            return;
-        }
+      const response = await axios.post(
+        "http://localhost:5000/api/auth/login",
+        formData,
+      );
 
-        try {
-            setLoading(true);
-            setError("");
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      
+      window.location.href = "/interview/setup";
 
-            const response = await axios.post(
-                "http://localhost:5000/api/auth/login",
-                formData
-            );
+      
+    } catch (error) {
+      console.error("Login Error:", error);
 
-            localStorage.setItem("token", response.data.token);
-            localStorage.setItem(
-                "user",
-                JSON.stringify(response.data.user)
-            );
+      setError(
+        error.response?.data?.message || "Login failed. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            navigate("/interview/setup");
-        } catch (error) {
-            console.error("Login Error:", error);
+  return (
+    <main className="auth-page">
+      <div className="auth-card">
+        <h1>Welcome Back</h1>
 
-            setError(
-                error.response?.data?.message ||
-                    "Login failed. Please try again."
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
+        <p className="auth-subtitle">Login to start your AI mock interview.</p>
 
-    return (
-        <main className="auth-page">
-            <div className="auth-card">
-                <h1>Welcome Back</h1>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Email</label>
 
-                <p className="auth-subtitle">
-                    Login to start your AI mock interview.
-                </p>
+            <input
+              type="email"
+              name="email"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChange={handleChange}
+            />
+          </div>
 
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label>Email</label>
+          <div className="form-group">
+            <label>Password</label>
 
-                        <input
-                            type="email"
-                            name="email"
-                            placeholder="Enter your email"
-                            value={formData.email}
-                            onChange={handleChange}
-                        />
-                    </div>
+            <input
+              type="password"
+              name="password"
+              placeholder="Enter your password"
+              value={formData.password}
+              onChange={handleChange}
+            />
+          </div>
 
-                    <div className="form-group">
-                        <label>Password</label>
+          {error && <p className="error-message">{error}</p>}
 
-                        <input
-                            type="password"
-                            name="password"
-                            placeholder="Enter your password"
-                            value={formData.password}
-                            onChange={handleChange}
-                        />
-                    </div>
-
-                    {error && (
-                        <p className="error-message">
-                            {error}
-                        </p>
-                    )}
-
-                    <button
-                        type="submit"
-                        className="generate-btn"
-                        disabled={loading}
-                    >
-                        {loading ? "Logging in..." : "Login"}
-                    </button>
-                </form>
-            </div>
-        </main>
-    );
+          <button type="submit" className="generate-btn" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
+      </div>
+    </main>
+  );
 }
 
 export default Login;
