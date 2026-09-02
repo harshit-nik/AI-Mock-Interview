@@ -6,6 +6,7 @@ import {
   getInterviewById,
   submitAnswer,
   completeInterview,
+  startInterview,
 } from "../controllers/interviewController.js";
 
 import authMiddleware from "../middleware/authMiddleware.js";
@@ -26,4 +27,7 @@ router.get("/:id", authMiddleware, getInterviewById);
 router.post("/submit-answer", authMiddleware, submitAnswer);
 
 router.post("/complete", authMiddleware, completeInterview);
+
+router.post("/:id/start", authMiddleware, startInterview);
+
 export default router;

@@ -163,6 +163,19 @@ export const submitAnswer = async (req, res) => {
         message: "Interview not found",
       });
     }
+    if (interview.status === "completed") {
+      return res.status(400).json({
+        success: false,
+        message: "Interview is already completed",
+      });
+    }
+
+    if (interview.expiresAt && new Date() >= new Date(interview.expiresAt)) {
+      return res.status(400).json({
+        success: false,
+        message: "Interview time has expired.",
+      });
+    }
 
     const question = interview.questions.id(questionId);
 
@@ -252,19 +265,38 @@ export const completeInterview = async (req, res) => {
             });
         }
 
+        if (interview.status === "completed") {
+            return res.status(200).json({
+                success: true,
+                message: "Interview is already completed",
+                interview,
+            });
+        }
+
+        const now = new Date();
+
+        const isExpired =
+            interview.expiresAt &&
+            now >= new Date(interview.expiresAt);
+
         const allAnswered = interview.questions.every(
-            (question) => question.answer && question.answer.trim() !== ""
+            (question) =>
+                question.answer &&
+                question.answer.trim() !== ""
         );
 
-        if (!allAnswered) {
+        // Before timer expires, all questions must be answered
+        if (!isExpired && !allAnswered) {
             return res.status(400).json({
                 success: false,
                 message: "Please answer all questions first",
             });
         }
 
+        // Unanswered questions remain at score 0
         const totalScore = interview.questions.reduce(
-            (total, question) => total + question.score,
+            (total, question) =>
+                total + (question.score || 0),
             0
         );
 
@@ -275,15 +307,79 @@ export const completeInterview = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: "Interview completed successfully",
+            message: isExpired
+                ? "Time expired. Interview completed automatically."
+                : "Interview completed successfully",
             interview,
         });
     } catch (error) {
-        console.error("Complete Interview Error:", error.message);
+        console.error(
+            "Complete Interview Error:",
+            error.message
+        );
 
         res.status(500).json({
             success: false,
             message: "Failed to complete interview",
         });
     }
+};
+
+export const startInterview = async (req, res) => {
+  try {
+    const interview = await Interview.findOne({
+      _id: req.params.id,
+      user: req.user._id,
+    });
+
+    if (!interview) {
+      return res.status(404).json({
+        success: false,
+        message: "Interview not found",
+      });
+    }
+
+    if (interview.status === "completed") {
+      return res.status(400).json({
+        success: false,
+        message: "Interview is already completed",
+      });
+    }
+
+    // If timer has already started, return existing timer
+    if (interview.startedAt && interview.expiresAt) {
+      return res.status(200).json({
+        success: true,
+        message: "Interview already started",
+        startedAt: interview.startedAt,
+        expiresAt: interview.expiresAt,
+      });
+    }
+
+    const startedAt = new Date();
+
+    const expiresAt = new Date(
+      startedAt.getTime() + interview.durationMinutes * 60 * 1000,
+    );
+
+    interview.startedAt = startedAt;
+    interview.expiresAt = expiresAt;
+    interview.status = "in-progress";
+
+    await interview.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Interview started successfully",
+      startedAt: interview.startedAt,
+      expiresAt: interview.expiresAt,
+    });
+  } catch (error) {
+    console.error("Start Interview Error:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to start interview",
+    });
+  }
 };

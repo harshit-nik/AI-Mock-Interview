@@ -51,6 +51,22 @@ const interviewSchema = new mongoose.Schema(
 
         questions: [questionSchema],
 
+        // Interview Timer
+        durationMinutes: {
+            type: Number,
+            default: 15,
+        },
+
+        startedAt: {
+            type: Date,
+            default: null,
+        },
+
+        expiresAt: {
+            type: Date,
+            default: null,
+        },
+
         totalScore: {
             type: Number,
             default: 0,
