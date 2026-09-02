@@ -1,10 +1,4 @@
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Link,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
 import { useState } from "react";
 
 import Home from "./pages/Home";
@@ -13,6 +7,7 @@ import Login from "./pages/Login";
 import Interview from "./pages/Interview";
 import Results from "./pages/Results";
 import InterviewHistory from "./pages/InterviewHistory";
+import Dashboard from "./pages/Dashboard";
 
 import "./App.css";
 
@@ -27,9 +22,7 @@ function ProtectedRoute({ children }) {
 }
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    !!localStorage.getItem("token")
-  );
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -49,6 +42,10 @@ function App() {
           <div className="nav-links">
             {isLoggedIn ? (
               <>
+                <Link to="/dashboard" className="nav-link">
+                  Dashboard
+                </Link>
+
                 <Link to="/interviews" className="nav-link">
                   My Interviews
                 </Link>
@@ -57,10 +54,7 @@ function App() {
                   Start Interview
                 </Link>
 
-                <button
-                  onClick={handleLogout}
-                  className="login-btn"
-                >
+                <button onClick={handleLogout} className="login-btn">
                   Logout
                 </button>
               </>
@@ -74,6 +68,15 @@ function App() {
 
         <Routes>
           <Route path="/" element={<Home />} />
+
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/interviews"
