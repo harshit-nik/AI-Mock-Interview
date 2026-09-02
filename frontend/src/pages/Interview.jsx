@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 
 function Interview() {
@@ -13,6 +12,10 @@ function Interview() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState({});
   const [error, setError] = useState("");
+
+  const [timeLeft, setTimeLeft] = useState(null);
+  const [startingInterview, setStartingInterview] = useState(true);
+  const [timeExpired, setTimeExpired] = useState(false);
 
   useEffect(() => {
     const fetchInterview = async () => {
@@ -56,19 +59,137 @@ function Interview() {
 
         setAnswers(savedAnswers);
         setEvaluations(savedEvaluations);
+
+        // Start timer if it has not started yet
+        if (interviewData.status !== "completed" && !interviewData.startedAt) {
+          const startResponse = await axios.post(
+            `http://localhost:5000/api/interviews/${id}/start`,
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+
+          const startedInterview = {
+            ...interviewData,
+            startedAt: startResponse.data.startedAt,
+            expiresAt: startResponse.data.expiresAt,
+            status: "in-progress",
+          };
+
+          setInterview(startedInterview);
+        } else if (interviewData.expiresAt) {
+          const remaining = Math.max(
+            0,
+            Math.floor(
+              (new Date(interviewData.expiresAt).getTime() - Date.now()) / 1000,
+            ),
+          );
+
+          setTimeLeft(remaining);
+
+          if (remaining <= 0) {
+            setTimeExpired(true);
+          }
+        }
       } catch (error) {
         console.error("Fetch Interview Error:", error);
 
         setError(error.response?.data?.message || "Failed to load interview.");
       } finally {
         setLoading(false);
+        setStartingInterview(false);
       }
     };
 
     fetchInterview();
   }, [id]);
 
+  // Countdown timer
+  useEffect(() => {
+    if (!interview?.expiresAt || interview.status === "completed") {
+      return;
+    }
+
+    const updateTimer = () => {
+      const remaining = Math.max(
+        0,
+        Math.floor(
+          (new Date(interview.expiresAt).getTime() - Date.now()) / 1000,
+        ),
+      );
+
+      setTimeLeft(remaining);
+
+      if (remaining <= 0) {
+        setTimeExpired(true);
+      }
+    };
+
+    updateTimer();
+
+    const timer = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(timer);
+  }, [interview]);
+
+  // Format timer as MM:SS
+  const formatTime = (seconds) => {
+    if (seconds === null) return "--:--";
+
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+
+    return `${String(minutes).padStart(2, "0")}:${String(
+      remainingSeconds,
+    ).padStart(2, "0")}`;
+  };
+
+  // Automatically complete interview when timer expires
+  useEffect(() => {
+    if (!timeExpired || !interview || interview.status === "completed") {
+      return;
+    }
+
+    const autoCompleteInterview = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const response = await axios.post(
+          "http://localhost:5000/api/interviews/complete",
+          {
+            interviewId: id,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        setInterview(response.data.interview);
+
+        alert("Time is up! Your interview has been completed.");
+
+        navigate(`/interview/${id}/results`);
+      } catch (error) {
+        console.error("Auto Complete Interview Error:", error);
+
+        alert(
+          error.response?.data?.message ||
+            "Time expired. Failed to complete interview.",
+        );
+      }
+    };
+
+    autoCompleteInterview();
+  }, [timeExpired, interview, id, navigate]);
+
   const handleAnswerChange = (questionId, value) => {
+    if (timeExpired) return;
+
     setAnswers((prev) => ({
       ...prev,
       [questionId]: value,
@@ -104,6 +225,11 @@ function Interview() {
   };
 
   const handleSubmitAnswer = async (questionId) => {
+    if (timeExpired) {
+      alert("Interview time has expired.");
+      return;
+    }
+
     const answer = answers[questionId]?.trim();
 
     if (!answer) {
@@ -163,7 +289,7 @@ function Interview() {
     }
   };
 
-  if (loading) {
+  if (loading || startingInterview) {
     return <div className="loading">Loading interview...</div>;
   }
 
@@ -179,15 +305,39 @@ function Interview() {
     (question) => question.answer && question.answer.trim() !== "",
   );
 
+  const timerWarning = timeLeft !== null && timeLeft <= 60 && timeLeft > 0;
+
   return (
     <main className="interview-page">
       <div className="interview-header">
-        <h1>{interview.jobRole} Interview</h1>
+        <div>
+          <h1>{interview.jobRole} Interview</h1>
 
-        <p>
-          {interview.experience} · {interview.difficulty}
-        </p>
+          <p>
+            {interview.experience} · {interview.difficulty}
+          </p>
+        </div>
+
+        {interview.status !== "completed" && (
+          <div
+            className={`interview-timer ${
+              timerWarning ? "timer-warning" : ""
+            } ${timeExpired ? "timer-expired" : ""}`}
+          >
+            <span className="timer-label">TIME LEFT</span>
+
+            <strong>{timeExpired ? "00:00" : formatTime(timeLeft)}</strong>
+
+            {timerWarning && !timeExpired && <small>Hurry up!</small>}
+          </div>
+        )}
       </div>
+
+      {timeExpired && (
+        <div className="timer-expired-message">
+          ⏰ Interview time has expired. Please complete the interview.
+        </div>
+      )}
 
       <div className="questions-container">
         {interview.questions.map((item, index) => {
@@ -208,14 +358,14 @@ function Interview() {
                 onChange={(e) => handleAnswerChange(item._id, e.target.value)}
                 placeholder="Type your answer here..."
                 rows="6"
-                disabled={!!evaluation}
+                disabled={!!evaluation || timeExpired}
               />
 
               {!evaluation && (
                 <button
                   className="submit-answer-btn"
                   onClick={() => handleSubmitAnswer(item._id)}
-                  disabled={submitting[item._id]}
+                  disabled={submitting[item._id] || timeExpired}
                 >
                   {submitting[item._id] ? "Evaluating..." : "Submit Answer"}
                 </button>
@@ -235,7 +385,7 @@ function Interview() {
         })}
       </div>
 
-      {allAnswered && (
+      {(allAnswered || timeExpired) && (
         <div className="complete-interview">
           <button className="complete-btn" onClick={handleCompleteInterview}>
             Complete Interview

@@ -27,7 +27,7 @@ function Results() {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         setInterview(response.data.interview);
@@ -35,8 +35,7 @@ function Results() {
         console.error("Fetch Results Error:", error);
 
         setError(
-          error.response?.data?.message ||
-            "Failed to load interview results."
+          error.response?.data?.message || "Failed to load interview results.",
         );
       } finally {
         setLoading(false);
@@ -61,19 +60,13 @@ function Results() {
   const totalQuestions = interview.questions.length;
 
   const answeredQuestions = interview.questions.filter(
-    (question) =>
-      question.answer && question.answer.trim() !== ""
+    (question) => question.answer && question.answer.trim() !== "",
   );
 
-  const totalScore = interview.questions.reduce(
-    (sum, question) => sum + (question.score || 0),
-    0
-  );
+  const totalScore = interview.totalScore || 0;
 
   const averageScore =
-    totalQuestions > 0
-      ? (totalScore / totalQuestions).toFixed(1)
-      : "0.0";
+    totalQuestions > 0 ? (totalScore / totalQuestions).toFixed(1) : "0.0";
 
   const scorePercentage = (Number(averageScore) / 10) * 100;
 
@@ -86,7 +79,6 @@ function Results() {
   return (
     <main className="results-page">
       <div className="results-container">
-
         {/* Header */}
         <div className="results-header">
           <span className="results-label">INTERVIEW COMPLETED</span>
@@ -101,7 +93,6 @@ function Results() {
 
         {/* Overall Score */}
         <div className="score-card">
-
           <div className="score-card-left">
             <span className="score-title">Overall Score</span>
 
@@ -111,8 +102,7 @@ function Results() {
             </h2>
 
             <p>
-              {answeredQuestions.length} / {totalQuestions} questions
-              answered
+              {answeredQuestions.length} / {totalQuestions} questions answered
             </p>
           </div>
 
@@ -126,12 +116,22 @@ function Results() {
               <span>{Math.round(scorePercentage)}%</span>
             </div>
           </div>
-
         </div>
+        {/* Overall AI Feedback */}
+        {interview.overallFeedback && (
+          <section className="overall-feedback">
+            <div className="section-heading">
+              <h2>Overall AI Feedback</h2>
+            </div>
+
+            <div className="overall-feedback-card">
+              <p>{interview.overallFeedback}</p>
+            </div>
+          </section>
+        )}
 
         {/* Question Performance */}
         <section className="question-results">
-
           <div className="section-heading">
             <h2>Question-wise Performance</h2>
             <span>
@@ -143,23 +143,13 @@ function Results() {
             const score = question.score || 0;
 
             return (
-              <div
-                className="result-question-card"
-                key={question._id}
-              >
-
+              <div className="result-question-card" key={question._id}>
                 <div className="question-card-top">
+                  <span className="question-number">Question {index + 1}</span>
 
-                  <span className="question-number">
-                    Question {index + 1}
-                  </span>
-
-                  <span
-                    className={`result-score ${getScoreClass(score)}`}
-                  >
+                  <span className={`result-score ${getScoreClass(score)}`}>
                     {score}/10
                   </span>
-
                 </div>
 
                 <h3>{question.question}</h3>
@@ -177,23 +167,17 @@ function Results() {
                     <p>{question.feedback}</p>
                   </div>
                 )}
-
               </div>
             );
           })}
-
         </section>
 
         {/* Bottom Button */}
         <div className="results-actions">
-          <button
-            className="back-home-btn"
-            onClick={() => navigate("/")}
-          >
+          <button className="back-home-btn" onClick={() => navigate("/")}>
             Back to Home
           </button>
         </div>
-
       </div>
     </main>
   );
