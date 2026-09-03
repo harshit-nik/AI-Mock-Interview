@@ -7,8 +7,15 @@ import interviewRoutes from "./routes/interviewRoutes.js";
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// CORS
+app.use(
+    cors({
+        origin: true,
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+    })
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
