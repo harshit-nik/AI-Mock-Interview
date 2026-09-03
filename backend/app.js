@@ -7,11 +7,21 @@ import interviewRoutes from "./routes/interviewRoutes.js";
 
 const app = express();
 
-// CORS
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://ai-mock-interview-alpha-nine.vercel.app",
+];
+
 const corsOptions = {
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use(cors(corsOptions));
@@ -27,10 +37,10 @@ app.use("/api/interviews", interviewRoutes);
 
 // Health check
 app.get("/", (req, res) => {
-    res.status(200).json({
-        success: true,
-        message: "AI Mock Interview API is running",
-    });
+  res.status(200).json({
+    success: true,
+    message: "AI Mock Interview API is running",
+  });
 });
 
 export default app;
