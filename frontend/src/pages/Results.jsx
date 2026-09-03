@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import API_URL from "../api";
 
 function Results() {
   const { id } = useParams();
@@ -21,14 +22,11 @@ function Results() {
           return;
         }
 
-        const response = await axios.get(
-          `http://localhost:5000/api/interviews/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        const response = await axios.get(`${API_URL}/api/interviews/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-        );
+        });
 
         setInterview(response.data.interview);
       } catch (error) {
