@@ -7,7 +7,6 @@ import interviewRoutes from "./routes/interviewRoutes.js";
 
 const app = express();
 
-// CORS
 app.use(
     cors({
         origin: true,

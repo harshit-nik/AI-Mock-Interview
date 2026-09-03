@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import API_URL from "../api";
 
 function InterviewHistory() {
   const [interviews, setInterviews] = useState([]);
@@ -18,7 +19,7 @@ function InterviewHistory() {
       const token = localStorage.getItem("token");
 
       await axios.delete(
-        `http://localhost:5000/api/interviews/${interviewId}`,
+        `${API_URL}/api/interviews/${interviewId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -27,12 +28,17 @@ function InterviewHistory() {
       );
 
       setInterviews((prevInterviews) =>
-        prevInterviews.filter((interview) => interview._id !== interviewId),
+        prevInterviews.filter(
+          (interview) => interview._id !== interviewId,
+        ),
       );
     } catch (error) {
       console.error("Delete Interview Error:", error);
 
-      alert(error.response?.data?.message || "Failed to delete interview.");
+      alert(
+        error.response?.data?.message ||
+          "Failed to delete interview.",
+      );
     }
   };
 
@@ -48,7 +54,7 @@ function InterviewHistory() {
         }
 
         const response = await axios.get(
-          "http://localhost:5000/api/interviews",
+          `${API_URL}/api/interviews`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -61,7 +67,8 @@ function InterviewHistory() {
         console.error("Fetch Interviews Error:", error);
 
         setError(
-          error.response?.data?.message || "Failed to load interview history.",
+          error.response?.data?.message ||
+            "Failed to load interview history.",
         );
       } finally {
         setLoading(false);
@@ -84,14 +91,22 @@ function InterviewHistory() {
       <div className="history-container">
         <div className="history-header">
           <div>
-            <span className="history-label">YOUR PRACTICE</span>
+            <span className="history-label">
+              YOUR PRACTICE
+            </span>
 
             <h1>My Interviews</h1>
 
-            <p>Review your previous interviews and track your progress.</p>
+            <p>
+              Review your previous interviews and track your
+              progress.
+            </p>
           </div>
 
-          <Link to="/interview/setup" className="start-btn">
+          <Link
+            to="/interview/setup"
+            className="start-btn"
+          >
             + Start New Interview
           </Link>
         </div>
@@ -103,30 +118,45 @@ function InterviewHistory() {
             <h2>No interviews yet</h2>
 
             <p>
-              Start your first AI mock interview and see your performance here.
+              Start your first AI mock interview and see your
+              performance here.
             </p>
 
-            <Link to="/interview/setup" className="start-btn">
+            <Link
+              to="/interview/setup"
+              className="start-btn"
+            >
               Start Your First Interview
             </Link>
           </div>
         ) : (
           <div className="interview-history-list">
             {interviews.map((interview) => {
-              const totalQuestions = interview.questions.length;
+              const totalQuestions =
+                interview.questions.length;
 
-              const answeredQuestions = interview.questions.filter(
-                (question) => question.answer && question.answer.trim() !== "",
-              ).length;
+              const answeredQuestions =
+                interview.questions.filter(
+                  (question) =>
+                    question.answer &&
+                    question.answer.trim() !== "",
+                ).length;
 
               const averageScore =
                 totalQuestions > 0
-                  ? ((interview.totalScore || 0) / totalQuestions).toFixed(1)
+                  ? (
+                      (interview.totalScore || 0) /
+                      totalQuestions
+                    ).toFixed(1)
                   : "0.0";
 
               const progress =
                 totalQuestions > 0
-                  ? Math.round((answeredQuestions / totalQuestions) * 100)
+                  ? Math.round(
+                      (answeredQuestions /
+                        totalQuestions) *
+                        100,
+                    )
                   : 0;
 
               const interviewDate = new Date(
@@ -137,10 +167,14 @@ function InterviewHistory() {
                 year: "numeric",
               });
 
-              const isCompleted = interview.status === "completed";
+              const isCompleted =
+                interview.status === "completed";
 
               return (
-                <div className="history-card" key={interview._id}>
+                <div
+                  className="history-card"
+                  key={interview._id}
+                >
                   <div className="history-card-main">
                     <div className="history-card-info">
                       <div className="history-title-row">
@@ -148,15 +182,20 @@ function InterviewHistory() {
 
                         <span
                           className={`status-badge ${
-                            isCompleted ? "completed" : "in-progress"
+                            isCompleted
+                              ? "completed"
+                              : "in-progress"
                           }`}
                         >
-                          {isCompleted ? "Completed" : "In Progress"}
+                          {isCompleted
+                            ? "Completed"
+                            : "In Progress"}
                         </span>
                       </div>
 
                       <p className="history-meta">
-                        {interview.experience} · {interview.difficulty} ·{" "}
+                        {interview.experience} ·{" "}
+                        {interview.difficulty} ·{" "}
                         {interviewDate}
                       </p>
 
@@ -165,7 +204,8 @@ function InterviewHistory() {
                           <span>Progress</span>
 
                           <span>
-                            {answeredQuestions}/{totalQuestions} answered
+                            {answeredQuestions}/
+                            {totalQuestions} answered
                           </span>
                         </div>
 
@@ -181,10 +221,14 @@ function InterviewHistory() {
                     </div>
 
                     <div className="history-score">
-                      <span className="score-label">SCORE</span>
+                      <span className="score-label">
+                        SCORE
+                      </span>
 
                       <strong>
-                        {isCompleted ? `${averageScore}/10` : "--"}
+                        {isCompleted
+                          ? `${averageScore}/10`
+                          : "--"}
                       </strong>
                     </div>
                   </div>
@@ -213,7 +257,11 @@ function InterviewHistory() {
 
                       <button
                         className="delete-interview-btn"
-                        onClick={() => handleDeleteInterview(interview._id)}
+                        onClick={() =>
+                          handleDeleteInterview(
+                            interview._id,
+                          )
+                        }
                       >
                         Delete
                       </button>

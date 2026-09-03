@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import axios from "axios";
+import API_URL from "../api";
 
 function Login() {
-  const navigate = useNavigate();
-
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -35,21 +34,24 @@ function Login() {
       setError("");
 
       const response = await axios.post(
-        "http://localhost:5000/api/auth/login",
+        `${API_URL}/api/auth/login`,
         formData,
       );
 
       localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-      
-      window.location.href = "/interview/setup";
 
-      
+      localStorage.setItem(
+        "user",
+        JSON.stringify(response.data.user),
+      );
+
+      window.location.href = "/interview/setup";
     } catch (error) {
       console.error("Login Error:", error);
 
       setError(
-        error.response?.data?.message || "Login failed. Please try again.",
+        error.response?.data?.message ||
+          "Login failed. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -61,7 +63,9 @@ function Login() {
       <div className="auth-card">
         <h1>Welcome Back</h1>
 
-        <p className="auth-subtitle">Login to start your AI mock interview.</p>
+        <p className="auth-subtitle">
+          Login to start your AI mock interview.
+        </p>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -88,12 +92,25 @@ function Login() {
             />
           </div>
 
-          {error && <p className="error-message">{error}</p>}
+          {error && (
+            <p className="error-message">
+              {error}
+            </p>
+          )}
 
-          <button type="submit" className="generate-btn" disabled={loading}>
+          <button
+            type="submit"
+            className="generate-btn"
+            disabled={loading}
+          >
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
+
+        <p className="auth-switch">
+          Don't have an account?{" "}
+          <Link to="/register">Create account</Link>
+        </p>
       </div>
     </main>
   );

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import API_URL from "../api";
 import {
   LineChart,
   Line,
@@ -30,7 +31,7 @@ function Dashboard() {
         }
 
         const response = await axios.get(
-          "http://localhost:5000/api/interviews/dashboard",
+          `${API_URL}/api/interviews/dashboard`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

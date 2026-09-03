@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import API_URL from "../api";
 
 function Interview() {
   const { id } = useParams();
@@ -29,7 +30,7 @@ function Interview() {
         }
 
         const response = await axios.get(
-          `http://localhost:5000/api/interviews/${id}`,
+          `${API_URL}/api/interviews/${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -61,9 +62,12 @@ function Interview() {
         setEvaluations(savedEvaluations);
 
         // Start timer if it has not started yet
-        if (interviewData.status !== "completed" && !interviewData.startedAt) {
+        if (
+          interviewData.status !== "completed" &&
+          !interviewData.startedAt
+        ) {
           const startResponse = await axios.post(
-            `http://localhost:5000/api/interviews/${id}/start`,
+            `${API_URL}/api/interviews/${id}/start`,
             {},
             {
               headers: {
@@ -84,7 +88,9 @@ function Interview() {
           const remaining = Math.max(
             0,
             Math.floor(
-              (new Date(interviewData.expiresAt).getTime() - Date.now()) / 1000,
+              (new Date(interviewData.expiresAt).getTime() -
+                Date.now()) /
+                1000,
             ),
           );
 
@@ -97,7 +103,10 @@ function Interview() {
       } catch (error) {
         console.error("Fetch Interview Error:", error);
 
-        setError(error.response?.data?.message || "Failed to load interview.");
+        setError(
+          error.response?.data?.message ||
+            "Failed to load interview.",
+        );
       } finally {
         setLoading(false);
         setStartingInterview(false);
@@ -109,7 +118,10 @@ function Interview() {
 
   // Countdown timer
   useEffect(() => {
-    if (!interview?.expiresAt || interview.status === "completed") {
+    if (
+      !interview?.expiresAt ||
+      interview.status === "completed"
+    ) {
       return;
     }
 
@@ -117,7 +129,9 @@ function Interview() {
       const remaining = Math.max(
         0,
         Math.floor(
-          (new Date(interview.expiresAt).getTime() - Date.now()) / 1000,
+          (new Date(interview.expiresAt).getTime() -
+            Date.now()) /
+            1000,
         ),
       );
 
@@ -149,7 +163,11 @@ function Interview() {
 
   // Automatically complete interview when timer expires
   useEffect(() => {
-    if (!timeExpired || !interview || interview.status === "completed") {
+    if (
+      !timeExpired ||
+      !interview ||
+      interview.status === "completed"
+    ) {
       return;
     }
 
@@ -158,7 +176,7 @@ function Interview() {
         const token = localStorage.getItem("token");
 
         const response = await axios.post(
-          "http://localhost:5000/api/interviews/complete",
+          `${API_URL}/api/interviews/complete`,
           {
             interviewId: id,
           },
@@ -201,7 +219,7 @@ function Interview() {
       const token = localStorage.getItem("token");
 
       const response = await axios.post(
-        "http://localhost:5000/api/interviews/complete",
+        `${API_URL}/api/interviews/complete`,
         {
           interviewId: id,
         },
@@ -220,7 +238,10 @@ function Interview() {
     } catch (error) {
       console.error("Complete Interview Error:", error);
 
-      alert(error.response?.data?.message || "Failed to complete interview.");
+      alert(
+        error.response?.data?.message ||
+          "Failed to complete interview.",
+      );
     }
   };
 
@@ -246,7 +267,7 @@ function Interview() {
       }));
 
       const response = await axios.post(
-        "http://localhost:5000/api/interviews/submit-answer",
+        `${API_URL}/api/interviews/submit-answer`,
         {
           interviewId: id,
           questionId,
@@ -280,7 +301,10 @@ function Interview() {
     } catch (error) {
       console.error("Submit Answer Error:", error);
 
-      alert(error.response?.data?.message || "Failed to evaluate answer.");
+      alert(
+        error.response?.data?.message ||
+          "Failed to evaluate answer.",
+      );
     } finally {
       setSubmitting((prev) => ({
         ...prev,
@@ -302,10 +326,14 @@ function Interview() {
   }
 
   const allAnswered = interview.questions.every(
-    (question) => question.answer && question.answer.trim() !== "",
+    (question) =>
+      question.answer && question.answer.trim() !== "",
   );
 
-  const timerWarning = timeLeft !== null && timeLeft <= 60 && timeLeft > 0;
+  const timerWarning =
+    timeLeft !== null &&
+    timeLeft <= 60 &&
+    timeLeft > 0;
 
   return (
     <main className="interview-page">
@@ -326,9 +354,13 @@ function Interview() {
           >
             <span className="timer-label">TIME LEFT</span>
 
-            <strong>{timeExpired ? "00:00" : formatTime(timeLeft)}</strong>
+            <strong>
+              {timeExpired ? "00:00" : formatTime(timeLeft)}
+            </strong>
 
-            {timerWarning && !timeExpired && <small>Hurry up!</small>}
+            {timerWarning && !timeExpired && (
+              <small>Hurry up!</small>
+            )}
           </div>
         )}
       </div>
@@ -344,8 +376,13 @@ function Interview() {
           const evaluation = evaluations[item._id];
 
           return (
-            <div className="question-card" key={item._id}>
-              <span className="question-number">Question {index + 1}</span>
+            <div
+              className="question-card"
+              key={item._id}
+            >
+              <span className="question-number">
+                Question {index + 1}
+              </span>
 
               <h2>{item.question}</h2>
 
@@ -355,7 +392,12 @@ function Interview() {
                     ? answers[item._id]
                     : item.answer || ""
                 }
-                onChange={(e) => handleAnswerChange(item._id, e.target.value)}
+                onChange={(e) =>
+                  handleAnswerChange(
+                    item._id,
+                    e.target.value,
+                  )
+                }
                 placeholder="Type your answer here..."
                 rows="6"
                 disabled={!!evaluation || timeExpired}
@@ -364,19 +406,28 @@ function Interview() {
               {!evaluation && (
                 <button
                   className="submit-answer-btn"
-                  onClick={() => handleSubmitAnswer(item._id)}
-                  disabled={submitting[item._id] || timeExpired}
+                  onClick={() =>
+                    handleSubmitAnswer(item._id)
+                  }
+                  disabled={
+                    submitting[item._id] || timeExpired
+                  }
                 >
-                  {submitting[item._id] ? "Evaluating..." : "Submit Answer"}
+                  {submitting[item._id]
+                    ? "Evaluating..."
+                    : "Submit Answer"}
                 </button>
               )}
 
               {evaluation && (
                 <div className="evaluation">
-                  <h3>Score: {evaluation.score}/10</h3>
+                  <h3>
+                    Score: {evaluation.score}/10
+                  </h3>
 
                   <p>
-                    <strong>AI Feedback:</strong> {evaluation.feedback}
+                    <strong>AI Feedback:</strong>{" "}
+                    {evaluation.feedback}
                   </p>
                 </div>
               )}
@@ -387,7 +438,10 @@ function Interview() {
 
       {(allAnswered || timeExpired) && (
         <div className="complete-interview">
-          <button className="complete-btn" onClick={handleCompleteInterview}>
+          <button
+            className="complete-btn"
+            onClick={handleCompleteInterview}
+          >
             Complete Interview
           </button>
         </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import API_URL from "../api";
 
 function InterviewSetup() {
     const navigate = useNavigate();
@@ -33,7 +34,7 @@ function InterviewSetup() {
 
             // 1. Create interview
             const createResponse = await axios.post(
-                "http://localhost:5000/api/interviews",
+                `${API_URL}/api/interviews`,
                 {
                     jobRole,
                     experience,
@@ -50,7 +51,7 @@ function InterviewSetup() {
 
             // 2. Generate AI questions
             const generateResponse = await axios.post(
-                "http://localhost:5000/api/interviews/generate-questions",
+                `${API_URL}/api/interviews/generate-questions`,
                 {
                     interviewId,
                     jobRole,

@@ -1,9 +1,17 @@
-import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
-import { useState } from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Link,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
+import { useEffect, useState } from "react";
 
 import Home from "./pages/Home";
 import InterviewSetup from "./pages/InterviewSetup";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Interview from "./pages/Interview";
 import Results from "./pages/Results";
 import InterviewHistory from "./pages/InterviewHistory";
@@ -21,8 +29,16 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
+function AppContent() {
+  const location = useLocation();
+
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    !!localStorage.getItem("token"),
+  );
+
+  useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem("token"));
+  }, [location.pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -32,91 +48,105 @@ function App() {
   };
 
   return (
-    <BrowserRouter>
-      <div className="app">
-        <nav className="navbar">
-          <Link to="/" className="logo">
-            AI-Mock-Interview
-          </Link>
+    <div className="app">
+      <nav className="navbar">
+        <Link to="/" className="logo">
+          AI-Mock-Interview
+        </Link>
 
-          <div className="nav-links">
-            {isLoggedIn ? (
-              <>
-                <Link to="/dashboard" className="nav-link">
-                  Dashboard
-                </Link>
-
-                <Link to="/interviews" className="nav-link">
-                  My Interviews
-                </Link>
-
-                <Link to="/interview/setup" className="nav-start-btn">
-                  Start Interview
-                </Link>
-
-                <button onClick={handleLogout} className="login-btn">
-                  Logout
-                </button>
-              </>
-            ) : (
-              <Link to="/login" className="login-btn">
-                Login
+        <div className="nav-links">
+          {isLoggedIn ? (
+            <>
+              <Link to="/dashboard" className="nav-link">
+                Dashboard
               </Link>
-            )}
-          </div>
-        </nav>
 
-        <Routes>
-          <Route path="/" element={<Home />} />
+              <Link to="/interviews" className="nav-link">
+                My Interviews
+              </Link>
 
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
+              <Link
+                to="/interview/setup"
+                className="nav-start-btn"
+              >
+                Start Interview
+              </Link>
 
-          <Route
-            path="/interviews"
-            element={
-              <ProtectedRoute>
-                <InterviewHistory />
-              </ProtectedRoute>
-            }
-          />
+              <button
+                onClick={handleLogout}
+                className="login-btn"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link to="/login" className="login-btn">
+              Login
+            </Link>
+          )}
+        </div>
+      </nav>
 
-          <Route
-            path="/interview/setup"
-            element={
-              <ProtectedRoute>
-                <InterviewSetup />
-              </ProtectedRoute>
-            }
-          />
+      <Routes>
+        <Route path="/" element={<Home />} />
 
-          <Route
-            path="/interview/:id"
-            element={
-              <ProtectedRoute>
-                <Interview />
-              </ProtectedRoute>
-            }
-          />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
 
-          <Route
-            path="/interview/:id/results"
-            element={
-              <ProtectedRoute>
-                <Results />
-              </ProtectedRoute>
-            }
-          />
+        <Route
+          path="/interviews"
+          element={
+            <ProtectedRoute>
+              <InterviewHistory />
+            </ProtectedRoute>
+          }
+        />
 
-          <Route path="/login" element={<Login />} />
-        </Routes>
-      </div>
+        <Route
+          path="/interview/setup"
+          element={
+            <ProtectedRoute>
+              <InterviewSetup />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/interview/:id"
+          element={
+            <ProtectedRoute>
+              <Interview />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/interview/:id/results"
+          element={
+            <ProtectedRoute>
+              <Results />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="/login" element={<Login />} />
+
+        <Route path="/register" element={<Register />} />
+      </Routes>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   );
 }
